@@ -1,0 +1,22 @@
+{
+    "name": "generator-fruster",
+    "version": "0.0.1",
+    "description": "Create a fruster node service",
+    "files": [
+        "index.js",
+        "generators"
+    ],
+    "main": "index.js",
+    "devDependencies": {
+        "yeoman-assert": "^3.1.1",
+        "yeoman-test": "^1.9.1"
+    },
+    "dependencies": {
+        "fs-extra": "7.0.0",
+        "fs-readdir-recursive": "^1.1.0",
+        "inquirer-npm-name": "^3.0.0",
+        "validate-npm-package-name": "^3.0.0",
+        "yeoman-generator": "^2.0.5",
+        "yeoman-remote": "^1.0.1"
+    }
+}
