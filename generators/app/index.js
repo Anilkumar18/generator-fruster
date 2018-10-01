@@ -1,16 +1,15 @@
 const Generator = require("yeoman-generator");
-const path = require("path");
 const askName = require("inquirer-npm-name");
 const validatePackageName = require("validate-npm-package-name");
 
+class YeomanGenerator extends Generator {
 
-module.exports = class extends Generator {
 	constructor(args, options) {
 		super(args, options);
 
 		this.option("name", {
 			type: String,
-			description: "Project name"
+			description: "Service name"
 		});
 	}
 
@@ -84,7 +83,7 @@ module.exports = class extends Generator {
 	}
 
 	default() {
-		this.composeWith(require.resolve("../fruster-template-service-js"), { name: this.props.name });
+		this.composeWith(require.resolve("../fruster-template-service-js/FrusterServiceGenerator.js"), { name: this.props.name });
 	}
 
 	installing() {
@@ -95,3 +94,5 @@ module.exports = class extends Generator {
 		this.log("Done!");
 	}
 };
+
+module.exports = YeomanGenerator;
