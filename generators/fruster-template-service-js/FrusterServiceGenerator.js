@@ -1,7 +1,8 @@
 const Generator = require("yeoman-generator");
 const fs = require("fs-extra");
-const remote = require("yeoman-remote");
 const read = require("fs-readdir-recursive")
+const request = require("superagent");
+const unzip = require("unzip");
 
 class FrusterServiceGenerator extends Generator {
 
@@ -16,39 +17,59 @@ class FrusterServiceGenerator extends Generator {
             default: "",
             description: "The name of the service."
         });
+
+        this.zipFile = "master.zip";
+        this.frusterTemplateServiceName = "fruster-template-service";
+        this.frusterTemplateServiceVarName = "frusterTemplateService";
+        this.appName = this.options.name;
+        this.cachePath = "./fruster-template-service-js-master";
     }
 
     writing() {
-        const done = this.async();
-        const that = this;
+        this.done = this.async();
 
         this.destinationRoot("./");
 
-        remote("https://github.com/frostdigital/fruster-template-service-js/archive/master.zip", function (err, cachePath) {
-            if (!err) {
-                const frusterTemplateServiceName = "fruster-template-service";
-                const frusterTemplateServiceVarName = "frusterTemplateService";
-                const appName = that.options.name;
-                const filesToCopy = read(cachePath);
+        return request
+            .get("https://github.com/frostdigital/fruster-template-service-js/archive/master.zip")
+            // .on("error", (error) => console.log(error))
+            .pipe(fs.createWriteStream(this.zipFile))
+            .on("finish", () => this._readZipFile());
+    }
 
-                filesToCopy.forEach(fileName => {
-                    console.log(`Copying ${cachePath}/${fileName}`);
+    _readZipFile() {
+        fs.createReadStream("./" + this.zipFile)
+            .pipe(unzip.Extract({ path: "./" }))
+            .on("close", () => this._moveFiles());
+    }
 
-                    let file = fs.readFileSync(`${cachePath}/${fileName}`).toString();
-                    file = that._replaceAll(file, frusterTemplateServiceName, appName);
-                    file = that._replaceAll(file, frusterTemplateServiceVarName, that._toCamelCase(appName));
+    _moveFiles() {
+        const filesToCopy = read(this.cachePath);
 
-                    fs.ensureFileSync(`${that.destinationRoot()}/${that._replaceAll(fileName, frusterTemplateServiceName, appName)}`);
-                    fs.writeFileSync(`${that.destinationRoot()}/${that._replaceAll(fileName, frusterTemplateServiceName, appName)}`, file);
-                });
+        filesToCopy.forEach(fileName => {
+            console.log(`Copying ${this.cachePath}/${fileName}`);
 
-            } else {
-                console.error("ERROR: Unable to fetch fruster-template-service-js at this time, sorry :( ");
-                throw err;
-            }
+            let file = fs.readFileSync(`${this.cachePath}/${fileName}`).toString();
+            file = this._replaceAll(file, this.frusterTemplateServiceName, this.appName);
+            file = this._replaceAll(file, this.frusterTemplateServiceVarName, this._toCamelCase(this.appName));
 
-            done();
-        }.bind(this));
+            fs.ensureFileSync(`${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`);
+            fs.writeFileSync(`${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`, file);
+        });
+
+        try {
+            fs.removeSync(this.cachePath);
+        } catch (err) {
+            console.error(err);
+        }
+
+        try {
+            fs.removeSync(this.zipFile);
+        } catch (err) {
+            console.error(err);
+        }
+
+        this.done();
     }
 
     /**
