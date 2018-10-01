@@ -5,7 +5,7 @@
 Install yeoman and the fruster generator:
 
 ```
-npm install -g yo generator-fruster
+npm install -g yeoman-generator generator-fruster
 ```
 alt. if yeoman already installed:
 ```
