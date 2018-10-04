@@ -44,7 +44,14 @@ class FrusterServiceGenerator extends Generator {
     }
 
     _moveFiles() {
-        const filesToCopy = read(this.cachePath);
+        const filesToCopy = read(this.cachePath, () => true);
+
+        console.log("\n");
+        console.log("=======================================");
+        console.log("filesToCopy");
+        console.log("=======================================");
+        console.log(require("util").inspect(filesToCopy, null, null, true));
+        console.log("\n");
 
         filesToCopy.forEach(fileName => {
             console.log(`Copying ${this.cachePath}/${fileName}`);
