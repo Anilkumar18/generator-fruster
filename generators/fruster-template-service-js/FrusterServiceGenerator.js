@@ -3,6 +3,7 @@ const fs = require("fs-extra");
 const read = require("fs-readdir-recursive")
 const request = require("superagent");
 const unzip = require("unzip");
+const path = require("path");
 
 class FrusterServiceGenerator extends Generator {
 
@@ -23,6 +24,7 @@ class FrusterServiceGenerator extends Generator {
         this.frusterTemplateServiceVarName = "frusterTemplateService";
         this.appName = this.options.name;
         this.cachePath = "./fruster-template-service-js-master";
+        this.exampleCode = this.options.exampleCode;
     }
 
     writing() {
@@ -44,24 +46,58 @@ class FrusterServiceGenerator extends Generator {
     }
 
     _moveFiles() {
+        console.log("Creating", this.appName);
+
+        const filesToAlwaysCopy = [
+            ".editorconfig",
+            ".gitignore",
+            ".jshintrc",
+            "Dockerfile",
+            "README.md",
+            "app.js",
+            "config.js",
+            "fruster-template-service.js",
+            "package-lock.json",
+            "package.json",
+            "constants.js",
+            "docs.js",
+            "errors.js",
+            "jasmine-runner.js",
+            "jasmine.json",
+            "spec-constants.js"
+        ];
+
         const filesToCopy = read(this.cachePath, () => true);
 
-        console.log("\n");
-        console.log("=======================================");
-        console.log("filesToCopy");
-        console.log("=======================================");
-        console.log(require("util").inspect(filesToCopy, null, null, true));
-        console.log("\n");
-
         filesToCopy.forEach(fileName => {
-            console.log(`Copying ${this.cachePath}/${fileName}`);
+            const actualFileName = path.basename(fileName);
 
             let file = fs.readFileSync(`${this.cachePath}/${fileName}`).toString();
             file = this._replaceAll(file, this.frusterTemplateServiceName, this.appName);
             file = this._replaceAll(file, this.frusterTemplateServiceVarName, this._toCamelCase(this.appName));
 
-            fs.ensureFileSync(`${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`);
-            fs.writeFileSync(`${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`, file);
+            if (this.exampleCode) {
+                const dirUrl = `${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`;
+
+                console.log(`[COPY]] ${dirUrl}`);
+
+                fs.ensureFileSync(dirUrl);
+                fs.writeFileSync(dirUrl, file);
+            } else {
+                const dirUrlBackup = `${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`;
+                const dirUrl = dirUrlBackup.replace(actualFileName, "");
+
+                if (filesToAlwaysCopy.includes(actualFileName)) {
+                    console.log(`[CREATE] ${dirUrlBackup}`);
+
+                    fs.ensureFileSync(dirUrlBackup);
+                    fs.writeFileSync(dirUrlBackup, file);
+                } else {
+                    console.log(`[COPY]] ${dirUrl}`);
+
+                    fs.ensureDirSync(dirUrl);
+                }
+            }
         });
 
         try {
