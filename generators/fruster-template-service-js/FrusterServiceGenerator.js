@@ -25,6 +25,24 @@ class FrusterServiceGenerator extends Generator {
         this.appName = this.options.name;
         this.cachePath = "./fruster-template-service-js-master";
         this.exampleCode = this.options.exampleCode;
+        this.filesToAlwaysCopy = [
+            ".editorconfig",
+            ".gitignore",
+            ".jshintrc",
+            "Dockerfile",
+            "README.md",
+            "app.js",
+            "config.js",
+            "fruster-template-service.js",
+            "package-lock.json",
+            "package.json",
+            "constants.js",
+            "docs.js",
+            "errors.js",
+            "jasmine-runner.js",
+            "jasmine.json",
+            "spec-constants.js"
+        ];
     }
 
     writing() {
@@ -46,27 +64,9 @@ class FrusterServiceGenerator extends Generator {
     }
 
     _moveFiles() {
-        console.log("Creating", this.appName);
+        console.log(this._getLogo());
 
-        const filesToAlwaysCopy = [
-            ".editorconfig",
-            ".gitignore",
-            ".jshintrc",
-            "Dockerfile",
-            "README.md",
-            "app.js",
-            "config.js",
-            "fruster-template-service.js",
-            "package-lock.json",
-            "package.json",
-            "constants.js",
-            "docs.js",
-            "errors.js",
-            "jasmine-runner.js",
-            "jasmine.json",
-            "spec-constants.js"
-        ];
-
+        console.log("====== Creating service", this.appName, " ======");
         const filesToCopy = read(this.cachePath, () => true);
 
         filesToCopy.forEach(fileName => {
@@ -79,7 +79,7 @@ class FrusterServiceGenerator extends Generator {
             if (this.exampleCode) {
                 const dirUrl = `${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`;
 
-                console.log(`[COPY]] ${dirUrl}`);
+                console.log(`copying ${dirUrl}`);
 
                 fs.ensureFileSync(dirUrl);
                 fs.writeFileSync(dirUrl, file);
@@ -87,13 +87,13 @@ class FrusterServiceGenerator extends Generator {
                 const dirUrlBackup = `${this.destinationRoot()}/${this._replaceAll(fileName, this.frusterTemplateServiceName, this.appName)}`;
                 const dirUrl = dirUrlBackup.replace(actualFileName, "");
 
-                if (filesToAlwaysCopy.includes(actualFileName)) {
-                    console.log(`[CREATE] ${dirUrlBackup}`);
+                if (this.filesToAlwaysCopy.includes(actualFileName)) {
+                    console.log(`creating ${dirUrlBackup}`);
 
                     fs.ensureFileSync(dirUrlBackup);
                     fs.writeFileSync(dirUrlBackup, file);
                 } else {
-                    console.log(`[COPY]] ${dirUrl}`);
+                    console.log(`copying ${dirUrl}`);
 
                     fs.ensureDirSync(dirUrl);
                 }
@@ -137,6 +137,24 @@ class FrusterServiceGenerator extends Generator {
         });
 
         return strings.join("");
+    }
+
+    _getLogo() {
+        return `
+    ███████╗██████╗ ██╗   ██╗███████╗████████╗███████╗██████╗
+    ██╔════╝██╔══██╗██║   ██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗
+    █████╗  ██████╔╝██║   ██║███████╗   ██║   █████╗  ██████╔╝
+    ██╔══╝  ██╔══██╗██║   ██║╚════██║   ██║   ██╔══╝  ██╔══██╗
+    ██║     ██║  ██║╚██████╔╝███████║   ██║   ███████╗██║  ██║
+    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+     ██████╗ ███████╗███╗   ██╗███████╗██████╗  █████╗ ████████╗ ██████╗ ██████╗
+    ██╔════╝ ██╔════╝████╗  ██║██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔═══██╗██╔══██╗
+    ██║  ███╗█████╗  ██╔██╗ ██║█████╗  ██████╔╝███████║   ██║   ██║   ██║██████╔╝
+    ██║   ██║██╔══╝  ██║╚██╗██║██╔══╝  ██╔══██╗██╔══██║   ██║   ██║   ██║██╔══██╗
+    ╚██████╔╝███████╗██║ ╚████║███████╗██║  ██║██║  ██║   ██║   ╚██████╔╝██║  ██║
+     ╚═════╝ ╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
+       `;
     }
 
 }

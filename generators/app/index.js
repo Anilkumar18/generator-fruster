@@ -1,17 +1,18 @@
 const Generator = require("yeoman-generator");
 const askName = require("inquirer-npm-name");
-const validatePackageName = require("validate-npm-package-name");
 
 class YeomanGenerator extends Generator {
 
     constructor(args, options) {
         super(args, options);
 
-        process.argv.forEach(function (val, index, array) {
-            console.log(index + ': ' + val);
-        });
+        if (process.argv[3])
+            this.options.name = process.argv[3];
 
-        this.options.name = process.argv[3];
+        if (process.argv[4])
+            this.options.exampleCode = process.argv[4];
+        else if (process.argv[3])
+            this.options.exampleCode = "n";
 
         this.option("name", {
             type: String,
@@ -25,21 +26,14 @@ class YeomanGenerator extends Generator {
     }
 
     initializing() {
-        this.props = { name: this.options.name || "" };
+        this.props = { name: "", exampleCode: undefined };
 
         if (this.options.name) {
-            const name = this.options.name;
-            const packageNameValidity = validatePackageName(name);
+            this.props.name = this.options.name;
+        }
 
-            if (packageNameValidity.validForNewPackages) {
-                this.props.name = name;
-                this.destinationRoot(`./${name}`);
-            } else {
-                throw new Error(
-                    packageNameValidity.errors[0] ||
-                    "The name option is not a valid npm package name."
-                );
-            }
+        if (this.options.exampleCode !== undefined) {
+            this.props.exampleCode = this.options.exampleCode;
         }
     }
 
@@ -73,7 +67,7 @@ class YeomanGenerator extends Generator {
         } else {
             promtedName = askName({
                 name: "name",
-                default: this.props.name,
+                default: "fruster-template-service",
                 message: "Service name",
             }, this);
         }
@@ -87,6 +81,11 @@ class YeomanGenerator extends Generator {
     }
 
     _askFor() {
+        if (this.props.exampleCode !== undefined) {
+            this.props.exampleCode = this.props.exampleCode === "y";
+            return;
+        }
+
         const prompts = [{
             name: 'exampleCode',
             message: 'Example code? - y/n',
